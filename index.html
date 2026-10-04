@@ -155,8 +155,8 @@
                         </li>
                         <li class="nav-item" data-page="cuti">
                             <a href="#" class="nav-link">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Request Cuti</span>
+                                <i class="fas fa-notes-medical"></i>
+                                <span>Pengajuan Sakit</span>
                             </a>
                         </li>
                     </ul>
@@ -194,8 +194,8 @@
                         </li>
                         <li class="nav-item" data-page="leave-reports">
                             <a href="#" class="nav-link">
-                                <i class="fas fa-umbrella-beach"></i>
-                                <span>Rekap Cuti & Izin</span>
+                                <i class="fas fa-notes-medical"></i>
+                                <span>Rekap Sakit & Izin</span>
                             </a>
                         </li>
                         <li class="nav-item" data-page="shift-schedule">
@@ -363,9 +363,9 @@
                                 </button>
                                 <button class="quick-btn" onclick="router.navigate('cuti')">
                                     <div class="quick-icon leave">
-                                        <i class="fas fa-umbrella-beach"></i>
+                                        <i class="fas fa-notes-medical"></i>
                                     </div>
-                                    <span>Ajukan Cuti</span>
+                                    <span>Ajukan Sakit</span>
                                 </button>
                             </div>
                         </div>
@@ -492,21 +492,6 @@
                                         <div class="btn-text"><span class="btn-label">Clock In</span><span
                                                 class="btn-time" id="clock-in-time">--:--</span></div>
                                     </button>
-                                    <button class="attendance-btn break-btn" id="btn-break" disabled>
-                                        <div class="btn-icon"><i class="fas fa-coffee"></i></div>
-                                        <div class="btn-text"><span class="btn-label">Istirahat</span><span
-                                                class="btn-time" id="break-time">--:--</span></div>
-                                    </button>
-                                    <button class="attendance-btn after-break-btn" id="btn-after-break" disabled>
-                                        <div class="btn-icon"><i class="fas fa-utensils"></i></div>
-                                        <div class="btn-text"><span class="btn-label">Selesai Istirahat</span><span
-                                                class="btn-time" id="after-break-time">--:--</span></div>
-                                    </button>
-                                    <button class="attendance-btn overtime-btn" id="btn-overtime" disabled>
-                                        <div class="btn-icon"><i class="fas fa-business-time"></i></div>
-                                        <div class="btn-text"><span class="btn-label">Lembur</span><span
-                                                class="btn-time" id="overtime-time">--:--</span></div>
-                                    </button>
                                     <button class="attendance-btn clock-out-btn" id="btn-clock-out" disabled>
                                         <div class="btn-icon"><i class="fas fa-sign-out-alt"></i></div>
                                         <div class="btn-text"><span class="btn-label">Clock Out</span><span
@@ -524,16 +509,6 @@
                                         <div class="timeline-dot"></div>
                                         <div class="timeline-content"><span class="timeline-title">Clock In</span><span
                                                 class="timeline-time">--:--</span></div>
-                                    </div>
-                                    <div class="timeline-item pending" data-type="break">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-content"><span class="timeline-title">Istirahat</span><span
-                                                class="timeline-time">--:--</span></div>
-                                    </div>
-                                    <div class="timeline-item pending" data-type="after-break">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-content"><span class="timeline-title">Selesai
-                                                Istirahat</span><span class="timeline-time">--:--</span></div>
                                     </div>
                                     <div class="timeline-item pending" data-type="clock-out">
                                         <div class="timeline-dot"></div>
@@ -855,32 +830,20 @@
                     <div class="cuti-container">
                         <div class="cuti-header">
                             <div class="cuti-info">
-                                <h2>Pengajuan Cuti</h2>
-                                <p>Ajukan cuti Anda dan lihat status pengajuan</p>
-                            </div>
-                            <div class="leave-balance">
-                                <div class="balance-card">
-                                    <div class="balance-icon"><i class="fas fa-umbrella-beach"></i></div>
-                                    <div class="balance-content"><span class="balance-value">12</span><span
-                                            class="balance-label">Sisa Cuti (hari)</span></div>
-                                </div>
+                                <h2>Pengajuan Sakit</h2>
+                                <p>Ajukan izin sakit Anda dan lihat status pengajuan</p>
                             </div>
                         </div>
                         <div class="cuti-grid">
                             <div class="cuti-form-card">
                                 <div class="card-header">
-                                    <h3>Form Pengajuan Cuti</h3>
+                                    <h3>Form Pengajuan Sakit</h3>
                                 </div>
                                 <form id="cuti-form" class="cuti-form">
                                     <div class="form-group">
-                                        <label for="leave-type">Jenis Cuti</label>
+                                        <label for="leave-type">Jenis Pengajuan</label>
                                         <select id="leave-type" required>
-                                            <option value="">Pilih Jenis Cuti</option>
-                                            <option value="annual">Cuti Tahunan</option>
-                                            <option value="sick">Cuti Sakit</option>
-                                            <option value="important">Cuti Penting</option>
-                                            <option value="maternity">Cuti Melahirkan</option>
-                                            <option value="other">Lainnya</option>
+                                            <option value="sick" selected>Sakit</option>
                                         </select>
                                     </div>
                                     <div class="form-row two-col">
@@ -891,16 +854,16 @@
                                     </div>
                                     <div class="form-group"><label for="leave-duration">Durasi</label><input type="text"
                                             id="leave-duration" readonly placeholder="0 hari"></div>
-                                    <div class="form-group"><label for="leave-reason">Alasan Cuti</label><textarea
-                                            id="leave-reason" rows="3" placeholder="Jelaskan alasan pengajuan cuti..."
+                                    <div class="form-group"><label for="leave-reason">Keterangan Sakit</label><textarea
+                                            id="leave-reason" rows="3" placeholder="Jelaskan kondisi/keluhan sakit Anda..."
                                             required></textarea></div>
                                     <div class="form-actions"><button type="submit" class="btn-primary"><i
-                                                class="fas fa-paper-plane"></i><span>Ajukan Cuti</span></button></div>
+                                                class="fas fa-paper-plane"></i><span>Ajukan Sakit</span></button></div>
                                 </form>
                             </div>
                             <div class="cuti-summary-card">
                                 <div class="card-header">
-                                    <h3>Ringkasan Cuti</h3>
+                                    <h3>Ringkasan Sakit</h3>
                                 </div>
                                 <div class="leave-stats">
                                     <div class="leave-stat-item">
@@ -923,7 +886,7 @@
                         </div>
                         <div class="cuti-history-card">
                             <div class="card-header">
-                                <h3>Riwayat Pengajuan Cuti</h3>
+                                <h3>Riwayat Pengajuan Sakit</h3>
                                 <div class="header-actions"><select class="select-filter">
                                         <option>Semua Status</option>
                                         <option>Menunggu</option>
@@ -972,9 +935,9 @@
                                         class="stat-label">Terlambat</span></div>
                             </div>
                             <div class="admin-stat-card">
-                                <div class="stat-icon on-leave"><i class="fas fa-umbrella-beach"></i></div>
+                                <div class="stat-icon on-leave"><i class="fas fa-notes-medical"></i></div>
                                 <div class="stat-details"><span class="stat-number" id="on-leave">0</span><span
-                                        class="stat-label">Sedang Cuti</span></div>
+                                        class="stat-label">Sedang Sakit</span></div>
                             </div>
                             <div class="admin-stat-card">
                                 <div class="stat-icon pending"><i class="fas fa-hourglass-half"></i></div>
@@ -1196,8 +1159,8 @@
                     <div class="reports-container">
                         <div class="reports-header">
                             <div class="reports-title">
-                                <h2>Rekap Cuti & Izin</h2>
-                                <p>Rekap pengajuan cuti dan izin karyawan</p>
+                                <h2>Rekap Sakit & Izin</h2>
+                                <p>Rekap pengajuan sakit dan izin karyawan</p>
                             </div>
                             <div class="reports-actions"><button class="btn-secondary" id="btn-export-leave"><i
                                         class="fas fa-download"></i><span>Export Excel</span></button><button
@@ -1210,7 +1173,6 @@
                                         value="2026-03"></div>
                                 <div class="filter-group"><label>Jenis</label><select id="leave-type-filter">
                                         <option value="">Semua</option>
-                                        <option value="cuti">Cuti</option>
                                         <option value="izin">Izin</option>
                                         <option value="sakit">Sakit</option>
                                     </select></div>
@@ -1466,7 +1428,7 @@
             <a href="#" class="bottom-nav-item" data-page="absensi"><i class="fas fa-clock"></i><span>Absen</span></a>
             <a href="#" class="bottom-nav-item" data-page="izin"><i class="fas fa-user-clock"></i><span>Izin</span></a>
             <a href="#" class="bottom-nav-item" data-page="jurnal"><i class="fas fa-book"></i><span>Jurnal</span></a>
-            <a href="#" class="bottom-nav-item" data-page="cuti"><i class="fas fa-calendar"></i><span>Cuti</span></a>
+            <a href="#" class="bottom-nav-item" data-page="cuti"><i class="fas fa-notes-medical"></i><span>Sakit</span></a>
         </nav>
     </div>
 

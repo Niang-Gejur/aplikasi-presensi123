@@ -1,11 +1,12 @@
 /**
- * Portal Karyawan - Cuti/Leave
- * Leave request functionality
+ * Portal Karyawan - Sakit (sebelumnya Cuti)
+ * Sick leave request functionality
+ * Catatan: nama objek, ID elemen, dan fungsi API tetap memakai "cuti/leave"
+ * agar kompatibel dengan router, HTML, dan backend yang sudah ada.
  */
 
 const cuti = {
     leaves: [],
-    leaveBalance: 12,
     filterStatus: '',
 
     async init() {
@@ -26,17 +27,12 @@ const cuti = {
             console.error('Error loading leaves:', error);
             this.leaves = storage.get('leaves', []);
         }
-
-        // Load balance from storage or use default
-        const savedBalance = storage.get('leaveBalance');
-        if (savedBalance !== null) {
-            this.leaveBalance = savedBalance;
-        }
     },
 
     initForm() {
         const form = document.getElementById('cuti-form');
-        if (form) {
+        if (form && !form.dataset.bound) {
+            form.dataset.bound = 'true';
             form.addEventListener('submit', (e) => this.handleSubmit(e));
         }
 
@@ -44,35 +40,35 @@ const cuti = {
         const startDate = document.getElementById('leave-start');
         const endDate = document.getElementById('leave-end');
         const duration = document.getElementById('leave-duration');
+        if (!startDate || !endDate || !duration) return;
 
         const calculateDuration = () => {
             if (startDate.value && endDate.value) {
                 const start = new Date(startDate.value);
                 const end = new Date(endDate.value);
-                const diffTime = end - start;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-                if (diffDays > 0) {
-                    duration.value = `${diffDays} hari`;
-                } else {
-                    duration.value = '0 hari';
-                }
+                const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                duration.value = diffDays > 0 ? `${diffDays} hari` : '0 hari';
             }
         };
 
-        if (startDate) startDate.addEventListener('change', calculateDuration);
-        if (endDate) endDate.addEventListener('change', calculateDuration);
+        if (!startDate.dataset.bound) {
+            startDate.dataset.bound = 'true';
+            startDate.addEventListener('change', calculateDuration);
+        }
+        if (!endDate.dataset.bound) {
+            endDate.dataset.bound = 'true';
+            endDate.addEventListener('change', calculateDuration);
+        }
     },
 
     async handleSubmit(e) {
         e.preventDefault();
 
-        const type = document.getElementById('leave-type');
         const startDate = document.getElementById('leave-start');
         const endDate = document.getElementById('leave-end');
         const reason = document.getElementById('leave-reason');
 
-        if (!type.value || !startDate.value || !endDate.value || !reason.value) {
+        if (!startDate.value || !endDate.value || !reason.value.trim()) {
             toast.error('Semua field harus diisi!');
             return;
         }
@@ -87,47 +83,26 @@ const cuti = {
             return;
         }
 
-        // Check balance for annual leave
-        if (type.value === 'annual' && diffDays > this.leaveBalance) {
-            toast.error('Sisa cuti tidak mencukupi!');
-            return;
-        }
-
-        const typeLabels = {
-            annual: 'Cuti Tahunan',
-            sick: 'Cuti Sakit',
-            important: 'Cuti Penting',
-            maternity: 'Cuti Melahirkan',
-            other: 'Lainnya'
-        };
-
         const currentUser = auth.getCurrentUser();
 
+        // Jenis selalu "sick"
         const leaveData = {
             userId: currentUser?.id || 'demo-user',
-            type: type.value,
-            typeLabel: typeLabels[type.value],
+            type: 'sick',
+            typeLabel: 'Sakit',
             startDate: startDate.value,
             endDate: endDate.value,
             duration: diffDays,
-            reason: reason.value
+            reason: reason.value.trim()
         };
 
         try {
             const result = await api.submitLeave(leaveData);
             if (result.success) {
                 this.leaves.unshift(result.data);
-
-                // Deduct balance for annual leave
-                if (type.value === 'annual') {
-                    this.leaveBalance -= diffDays;
-                    storage.set('leaveBalance', this.leaveBalance);
-                    this.updateBalanceDisplay();
-                }
-
-                toast.success('Pengajuan cuti berhasil dikirim!');
+                toast.success('Pengajuan sakit berhasil dikirim!');
             } else {
-                toast.error(result.error || 'Gagal mengajukan cuti');
+                toast.error(result.error || 'Gagal mengajukan sakit');
             }
         } catch (error) {
             console.error('Error submitting leave:', error);
@@ -144,18 +119,12 @@ const cuti = {
 
     initFilters() {
         const statusFilter = document.querySelector('.cuti-history-card .select-filter');
-        if (statusFilter) {
+        if (statusFilter && !statusFilter.dataset.bound) {
+            statusFilter.dataset.bound = 'true';
             statusFilter.addEventListener('change', (e) => {
                 this.filterStatus = e.target.value === 'Semua Status' ? '' : e.target.value.toLowerCase();
                 this.renderLeaveList();
             });
-        }
-    },
-
-    updateBalanceDisplay() {
-        const balanceEl = document.querySelector('.balance-value');
-        if (balanceEl) {
-            balanceEl.textContent = this.leaveBalance;
         }
     },
 
@@ -177,7 +146,7 @@ const cuti = {
         if (!list) return;
 
         // Filter leaves
-        let filteredLeaves = this.leaves.filter(l => {
+        const filteredLeaves = this.leaves.filter(l => {
             if (!this.filterStatus) return true;
             if (this.filterStatus === 'menunggu') return l.status === 'pending';
             if (this.filterStatus === 'disetujui') return l.status === 'approved';
@@ -189,7 +158,7 @@ const cuti = {
             list.innerHTML = `
                 <div class="empty-state" style="text-align: center; padding: var(--spacing-xl); color: var(--text-muted);">
                     <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--spacing);"></i>
-                    <p>${this.filterStatus ? 'Tidak ada pengajuan yang sesuai' : 'Belum ada pengajuan cuti'}</p>
+                    <p>${this.filterStatus ? 'Tidak ada pengajuan yang sesuai' : 'Belum ada pengajuan sakit'}</p>
                 </div>
             `;
             return;
@@ -211,22 +180,14 @@ const cuti = {
                 dateDisplay = `${startFormatted} - ${endFormatted}`;
             }
 
-            const icons = {
-                annual: 'fa-umbrella-beach',
-                sick: 'fa-heartbeat',
-                important: 'fa-home',
-                maternity: 'fa-baby',
-                other: 'fa-question-circle'
-            };
-
             return `
                 <div class="leave-item">
                     <div class="leave-icon">
-                        <i class="fas ${icons[leave.type] || 'fa-calendar'}"></i>
+                        <i class="fas fa-notes-medical"></i>
                     </div>
                     <div class="leave-content">
                         <div class="leave-header">
-                            <h4 class="leave-type">${leave.typeLabel}</h4>
+                            <h4 class="leave-type">Sakit</h4>
                             <span class="leave-status ${leave.status}">${this.getStatusLabel(leave.status)}</span>
                         </div>
                         <div class="leave-details">
@@ -264,7 +225,7 @@ const cuti = {
             if (leave) { leave.status = 'approved'; }
             this.renderLeaveList();
             this.updateStats();
-            toast.success('Pengajuan cuti disetujui!');
+            toast.success('Pengajuan sakit disetujui!');
         } catch (error) {
             console.error('Error approving leave:', error);
         }
@@ -279,19 +240,10 @@ const cuti = {
         try {
             await api.rejectLeave(id);
             const leave = this.leaves.find(l => l.id === id);
-            if (leave) {
-                leave.status = 'rejected';
-
-                // Return balance for annual leave
-                if (leave.type === 'annual') {
-                    this.leaveBalance += leave.duration;
-                    storage.set('leaveBalance', this.leaveBalance);
-                    this.updateBalanceDisplay();
-                }
-            }
+            if (leave) { leave.status = 'rejected'; }
             this.renderLeaveList();
             this.updateStats();
-            toast.info('Pengajuan cuti ditolak!');
+            toast.info('Pengajuan sakit ditolak!');
         } catch (error) {
             console.error('Error rejecting leave:', error);
         }

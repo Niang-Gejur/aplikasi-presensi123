@@ -7,6 +7,8 @@ const adminDashboard = {
     employees: [],
     attendance: [],
     leaves: [],
+    izin: [],
+    journals: [],
 
     async init() {
         if (!auth.isAdmin()) {
@@ -23,22 +25,25 @@ const adminDashboard = {
 
     async loadData() {
         try {
-            const [empResult, attResult, leaveResult, izinResult] = await Promise.all([
+            const [empResult, attResult, leaveResult, izinResult, jurnalResult] = await Promise.all([
                 api.getEmployees(),
                 api.getAllAttendance(),
                 api.getAllLeaves(),
-                api.getAllIzin()
+                api.getAllIzin(),
+                api.getAllJournals()
             ]);
             this.employees = empResult.data || [];
             this.attendance = attResult.data || [];
             this.leaves = leaveResult.data || [];
             this.izin = izinResult.data || [];
+            this.journals = jurnalResult.data || [];
         } catch (error) {
             console.error('Error loading admin data:', error);
             this.employees = storage.get('admin_employees', []);
             this.attendance = storage.get('attendance', []);
             this.leaves = storage.get('leaves', []);
             this.izin = storage.get('izin', []);
+            this.journals = storage.get('jurnals', []);
         }
     },
 
@@ -63,7 +68,7 @@ const adminDashboard = {
             }
         });
 
-        // Compute those on leave (cuti / izin) for today
+        // Compute those on leave (sakit / izin) for today
         const onLeave = this.leaves.filter(l => l.status === 'approved' && l.startDate <= todayStr && l.endDate >= todayStr).length +
             this.izin.filter(i => i.status === 'approved' && i.date === todayStr).length;
 
@@ -116,26 +121,72 @@ const adminDashboard = {
         requestAnimationFrame(animate);
     },
 
+    // Waktu relatif, contoh: "5 menit yang lalu"
+    timeAgo(date) {
+        const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (diff < 60) return 'Baru saja';
+        if (diff < 3600) return `${Math.floor(diff / 60)} menit yang lalu`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} jam yang lalu`;
+        if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} hari yang lalu`;
+        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
+
+    // Susun aktivitas terbaru dari data asli (absensi, jurnal, sakit, izin)
+    buildRecentActivities() {
+        const findEmp = (userId) => this.employees.find(e => String(e.id) === String(userId));
+        const toDate = (value, time) => {
+            if (!value) return null;
+            const d = time ? new Date(`${value}T${time}`) : new Date(value);
+            return isNaN(d.getTime()) ? null : d;
+        };
+        const events = [];
+        const add = (userId, action, ts) => {
+            const emp = findEmp(userId);
+            if (!emp || !ts) return; // lewati data tanpa karyawan/waktu yang valid
+            events.push({ user: emp.name, avatar: emp.avatar, action, ts });
+        };
+
+        this.attendance.forEach(a => {
+            add(a.userId, 'Clock In', toDate(a.date, a.clockIn));
+            if (a.clockOut) add(a.userId, 'Clock Out', toDate(a.date, a.clockOut));
+        });
+        this.journals.forEach(j => {
+            add(j.userId, 'Mengisi Jurnal', toDate(j.updatedAt) || toDate(j.date));
+        });
+        this.leaves.forEach(l => {
+            add(l.userId, 'Mengajukan Sakit', toDate(l.appliedAt) || toDate(l.startDate));
+        });
+        this.izin.forEach(i => {
+            const label = i.type === 'sick' ? 'Mengajukan Sakit' : 'Mengajukan Izin';
+            add(i.userId, label, toDate(i.appliedAt) || toDate(i.date));
+        });
+
+        return events.sort((x, y) => y.ts - x.ts).slice(0, 5);
+    },
+
     renderRecentActivity() {
         const container = document.getElementById('admin-recent-activity');
         if (!container) return;
 
-        const activities = [
-            { user: 'Ahmad Rizky', action: 'Clock In', time: '5 menit yang lalu', avatar: 'https://ui-avatars.com/api/?name=Ahmad&background=3B82F6&color=fff' },
-            { user: 'Budi Santoso', action: 'Mengajukan Cuti', time: '15 menit yang lalu', avatar: 'https://ui-avatars.com/api/?name=Budi&background=10B981&color=fff' },
-            { user: 'Citra Dewi', action: 'Mengisi Jurnal', time: '30 menit yang lalu', avatar: 'https://ui-avatars.com/api/?name=Citra&background=F59E0B&color=fff' },
-            { user: 'Dedi Pratama', action: 'Clock Out', time: '1 jam yang lalu', avatar: 'https://ui-avatars.com/api/?name=Dedi&background=EF4444&color=fff' },
-            { user: 'Eka Putri', action: 'Izin Sakit', time: '2 jam yang lalu', avatar: 'https://ui-avatars.com/api/?name=Eka&background=8B5CF6&color=fff' }
-        ];
+        const activities = this.buildRecentActivities();
+
+        if (activities.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: var(--spacing-xl); color: var(--text-muted);">
+                    <p>Belum ada aktivitas.</p>
+                </div>
+            `;
+            return;
+        }
 
         container.innerHTML = activities.map(act => `
             <div class="activity-item">
                 <div class="activity-avatar">
-                    <img src="${getAvatarUrl(act)}" alt="${act.user}">
+                    <img src="${getAvatarUrl({ name: act.user, avatar: act.avatar })}" alt="${act.user}">
                 </div>
                 <div class="activity-content">
                     <p class="activity-text"><strong>${act.user}</strong> ${act.action}</p>
-                    <span class="activity-time">${act.time}</span>
+                    <span class="activity-time">${this.timeAgo(act.ts)}</span>
                 </div>
             </div>
         `).join('');

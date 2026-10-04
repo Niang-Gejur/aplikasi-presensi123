@@ -1,0 +1,75 @@
+/* Banner "Selamat ..." di dashboard dengan identitas Bank NTT */
+.dashboard-welcome .welcome-card {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(120deg, #2a1769 0%, #3a2a96 45%, #0095de 100%) !important;
+    color: #fff;
+}
+
+/* Hiasan lengkung halus di latar belakang */
+.dashboard-welcome .welcome-card::before,
+.dashboard-welcome .welcome-card::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+.dashboard-welcome .welcome-card::before {
+    width: 260px;
+    height: 260px;
+    right: 18%;
+    top: -120px;
+}
+.dashboard-welcome .welcome-card::after {
+    width: 180px;
+    height: 180px;
+    right: -40px;
+    bottom: -90px;
+}
+
+.dashboard-welcome .welcome-content {
+    position: relative;
+    z-index: 1;
+}
+.dashboard-welcome .welcome-content h2,
+.dashboard-welcome .welcome-content p {
+    color: #fff;
+}
+
+/* Ikon matahari/bulan diganti logo perusahaan */
+.dashboard-welcome .welcome-illustration {
+    display: none !important;
+}
+
+.dashboard-welcome .welcome-logo {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 16px;
+    padding: 10px 18px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.dashboard-welcome .welcome-logo img {
+    display: block;
+    height: 72px;
+    width: auto;
+}
+
+@media (max-width: 768px) {
+    .dashboard-welcome .welcome-logo {
+        padding: 6px 12px;
+        border-radius: 12px;
+    }
+    .dashboard-welcome .welcome-logo img {
+        height: 44px;
+    }
+}

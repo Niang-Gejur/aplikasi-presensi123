@@ -1,6 +1,7 @@
 /**
  * Portal Karyawan - Admin Reports
  * Reports and exports for admin
+ * (Rekap Cuti & Izin sudah diganti menjadi Rekap Sakit & Izin)
  */
 
 const adminReports = {
@@ -98,11 +99,11 @@ const adminReports = {
                 }
             });
 
-            // Calculate leave/absent (Cutis & Izins)
+            // Hitung hari tidak hadir (sakit & izin yang disetujui)
             const empLeaves = leaves.filter(l => String(l.userId) === String(emp.id) && l.status === 'approved');
             const empIzin = izinList.filter(i => String(i.userId) === String(emp.id) && i.status === 'approved');
 
-            // Simplified sum: duration of valid leaves + single-day izin
+            // Simplified sum: durasi sakit + durasi izin
             let leaveDays = 0;
             empLeaves.forEach(l => leaveDays += parseInt(l.duration) || 1);
             empIzin.forEach(i => leaveDays += parseInt(i.duration) || 1);
@@ -120,6 +121,15 @@ const adminReports = {
         });
 
         const currentUser = auth.getCurrentUser();
+
+        // Cari karyawan berdasarkan userId (fallback ke user yang sedang login)
+        const findEmployee = (userId) => {
+            let emp = employees.find(e => String(e.id) === String(userId));
+            if (!emp && currentUser && String(currentUser.id) === String(userId)) {
+                emp = { name: currentUser.name, department: currentUser.department || '-' };
+            }
+            return emp || { name: 'Karyawan', department: '-' };
+        };
 
         this.jurnalData = jurnals.map(j => {
             let emp = employees.find(e => e.id === j.userId);
@@ -143,25 +153,32 @@ const adminReports = {
             };
         });
 
+        // Data rekap: pengajuan sakit (tabel leaves) + izin (tabel izin)
         this.leaveData = [
-            ...leaves.map(l => ({
-                name: l.typeLabel === 'Cuti Tahunan' ? 'Budi Santoso' : 'Citra Dewi',
-                department: l.typeLabel === 'Cuti Tahunan' ? 'HR' : 'Finance',
-                type: l.type === 'annual' ? 'Cuti' : l.type,
-                dates: l.startDate === l.endDate ? l.startDate : `${l.startDate} - ${l.endDate}`,
-                duration: l.duration,
-                reason: l.reason,
-                status: l.status
-            })),
-            ...izinList.map(i => ({
-                name: 'Dedi Pratama',
-                department: 'Marketing',
-                type: 'Izin',
-                dates: i.date,
-                duration: i.duration,
-                reason: i.reason,
-                status: i.status
-            }))
+            ...leaves.map(l => {
+                const emp = findEmployee(l.userId);
+                return {
+                    name: emp.name,
+                    department: emp.department,
+                    type: 'Sakit',
+                    dates: l.startDate === l.endDate ? l.startDate : `${l.startDate} - ${l.endDate}`,
+                    duration: l.duration,
+                    reason: l.reason,
+                    status: l.status
+                };
+            }),
+            ...izinList.map(i => {
+                const emp = findEmployee(i.userId);
+                return {
+                    name: emp.name,
+                    department: emp.department,
+                    type: i.type === 'sick' ? 'Sakit' : 'Izin',
+                    dates: i.date,
+                    duration: i.duration,
+                    reason: i.reason,
+                    status: i.status
+                };
+            })
         ];
     },
 
@@ -317,7 +334,6 @@ const adminReports = {
     getFilteredLeave() {
         return this.leaveData.filter(row => {
             const matchesType = !this.filters.leave.type ||
-                (this.filters.leave.type === 'cuti' && row.type.toLowerCase().includes('cuti')) ||
                 (this.filters.leave.type === 'izin' && row.type.toLowerCase().includes('izin')) ||
                 (this.filters.leave.type === 'sakit' && row.type.toLowerCase().includes('sakit'));
             const matchesStatus = !this.filters.leave.status || row.status === this.filters.leave.status;
@@ -436,7 +452,7 @@ const adminReports = {
                 <td>${row.reason}</td>
                 <td>
                     <span class="status-badge ${row.status}">
-                        ${statusLabels[row.status]}
+                        ${statusLabels[row.status] || row.status}
                     </span>
                 </td>
                 <td>
@@ -463,7 +479,7 @@ const adminReports = {
                 break;
             case 'leave':
                 data = this.getFilteredLeave();
-                filename = 'Rekap_Cuti_Izin.csv';
+                filename = 'Rekap_Sakit_Izin.csv';
                 break;
         }
 
@@ -577,7 +593,7 @@ const adminReports = {
     },
 
     viewLeaveDetail(name) {
-        toast.info(`Detail cuti/izin ${name}`);
+        toast.info(`Detail sakit/izin ${name}`);
     }
 };
 
